@@ -39,3 +39,15 @@
 
 # debug information files
 *.dwo
+
+# Binaries
+bin/
+
+# Cache
+*.cache
+
+# compile_commands.json
+compile_commands.json
+
+# compiled binary
+noise2normal
