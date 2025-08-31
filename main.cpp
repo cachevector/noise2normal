@@ -1,4 +1,5 @@
 #include "opencv2/core.hpp"
+#include "opencv2/core/base.hpp"
 #include "opencv2/core/hal/interface.h"
 #include "opencv2/core/mat.hpp"
 #include "opencv2/highgui.hpp"
@@ -10,11 +11,17 @@
 #include <vector>
 
 // Add Gaussian Noise
-cv::Mat addGaussianNoise(cv::Mat image, double mean, double stddev) {
-    cv::Mat noise(image.size(), image.type());
+cv::Mat addGaussianNoise(const cv::Mat &image, double mean, double stddev) {
+    // only supports grayscale uchar for now
+    CV_Assert(image.type() == CV_8U);
+
+    cv::Mat floatImg;
+    image.convertTo(floatImg, CV_32F);
+
+    cv::Mat noise(floatImg.size(), CV_32F);
     cv::randn(noise, mean, stddev);
-    cv::Mat result = image + noise;
-    return result;
+
+    return floatImg + noise;
 }
 
 struct Options {
