@@ -17,33 +17,39 @@ cv::Mat addGaussianNoise(cv::Mat image, double mean, double stddev) {
     return result;
 }
 
-int main(int argc, char *argv[]) {
-    std::string image_path;
-    int n_samples = 5;
-    bool show_random = false;
+struct Options {
+    std::string imagePath;
+    int sampleSize = 5;
+    bool showRandom = false;
+};
 
-    for (int i = 1; i < argc; ++i) {
+Options parseArgs(int argc, char *argv[]) {
+    Options opts;
+    for (int i = 0; i < argc; i++) {
         std::string arg = argv[i];
-
         if ((arg == "-i" || arg == "--image") && i + 1 < argc) {
-            image_path = argv[++i];
+            opts.imagePath = argv[++i];
         } else if (arg == "--sample-size" && i + 1 < argc) {
-            n_samples = std::stoi(argv[++i]);
+            opts.sampleSize = std::stoi(argv[++i]);
         } else if (arg == "--show-random-noisy-image") {
-            show_random = true;
+            opts.showRandom = true;
         }
     }
 
-    if (image_path.empty()) {
+    return opts;
+}
+
+int main(int argc, char *argv[]) {
+    auto opts = parseArgs(argc, argv);
+
+    if (opts.imagePath.empty()) {
         std::cerr << "Usage: " << argv[0]
                   << " -i <image_path> [--samples-size N] [--show-random-noisy-image]\n";
 
         return 1;
     }
 
-    std::cout << n_samples << std::endl;
-
-    cv::Mat img = cv::imread(image_path, cv::IMREAD_COLOR);
+    cv::Mat img = cv::imread(opts.imagePath, cv::IMREAD_COLOR);
     if (img.empty()) {
         std::cerr << "Error: No image found.\n";
         return -1;
@@ -60,7 +66,7 @@ int main(int argc, char *argv[]) {
 
     // generate noisy samples
     std::vector<cv::Mat> noisy_images;
-    for (int i = 0; i < n_samples; ++i)
+    for (int i = 0; i < opts.sampleSize; ++i)
         noisy_images.push_back(addGaussianNoise(resized_img, 0, 20));
 
     /*
@@ -69,15 +75,15 @@ int main(int argc, char *argv[]) {
      * Uses Central Limit Theorem to reduce noise in the image
      */
     cv::Mat result(resized_img.size(), CV_32F, cv::Scalar(0));
-    for (int i = 0; i < n_samples; ++i) {
+    for (int i = 0; i < opts.sampleSize; ++i) {
         result += noisy_images[i];
     }
-    result /= n_samples;
+    result /= opts.sampleSize;
     result.convertTo(result, CV_8U);
 
     // --show-ramdom-noisy-image: true
     // show random noisy sample
-    if (show_random) {
+    if (opts.showRandom) {
         std::srand(std::time(0));
         int idx = std::rand() % noisy_images.size();
         cv::Mat random_sample;
