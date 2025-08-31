@@ -72,9 +72,10 @@ int main(int argc, char *argv[]) {
     resize(grayImage, resized_img, new_size, 0, 0, cv::INTER_LINEAR);
 
     // generate noisy samples
-    std::vector<cv::Mat> noisy_images;
+    std::vector<cv::Mat> noisySamples;
+    noisySamples.reserve(opts.sampleSize);
     for (int i = 0; i < opts.sampleSize; ++i)
-        noisy_images.push_back(addGaussianNoise(resized_img, 0, 20));
+        noisySamples.push_back(addGaussianNoise(resized_img, 0, 20));
 
     /*
      * Noise Reduction
@@ -83,18 +84,18 @@ int main(int argc, char *argv[]) {
      */
     cv::Mat result(resized_img.size(), CV_32F, cv::Scalar(0));
     for (int i = 0; i < opts.sampleSize; ++i) {
-        result += noisy_images[i];
+        result += noisySamples[i];
     }
     result /= opts.sampleSize;
     result.convertTo(result, CV_8U);
 
     // --show-ramdom-noisy-image: true
     // show random noisy sample
-    if (opts.showRandom) {
-        std::srand(std::time(0));
-        int idx = std::rand() % noisy_images.size();
+    if (opts.showRandom && !noisySamples.empty()) {
+        std::srand(static_cast<unsigned>(std::time(nullptr)));
+        int idx = std::rand() % noisySamples.size();
         cv::Mat random_sample;
-        noisy_images[idx].convertTo(random_sample, CV_8U);
+        noisySamples[idx].convertTo(random_sample, CV_8U);
         cv::imshow("Random Noisy Sample", random_sample);
     }
 
